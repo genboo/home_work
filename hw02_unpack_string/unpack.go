@@ -10,17 +10,17 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(str string) (string, error) {
-	//пустое значение возвращает пустое значение
+	// пустое значение возвращает пустое значение
 	if str == "" {
 		return "", nil
 	}
 
 	runes := []rune(str)
-	//не должно начинаться с цифры
+	// не должно начинаться с цифры
 	if _, err := strconv.Atoi(string(runes[0])); err == nil {
 		return "", ErrInvalidString
 	}
-	//недопустимы числа
+	// недопустимы числа
 	reg := regexp.MustCompile(`[0-9]{2,}`)
 	if reg.MatchString(str) {
 		return "", ErrInvalidString
