@@ -12,7 +12,7 @@ type Pair struct {
 }
 
 func Top10(str string) []string {
-	reg := regexp.MustCompile(`(?i)([а-яА-ЯЁё]+-?[а-яА-ЯЁё]*)`)
+	reg := regexp.MustCompile(`(?i)(([,.а-яё-]+-?[а-яё]*[^, .!?\n\r])|([а-яё]))`)
 	// найти все слова
 	matches := reg.FindAllString(str, -1)
 	if len(matches) == 0 {
