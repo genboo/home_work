@@ -19,12 +19,12 @@ func Top10(str string) []string {
 		return nil
 	}
 	// найти все повторения
-	var counts = make(map[string]int)
+	counts := make(map[string]int)
 	for _, v := range matches {
 		counts[strings.ToLower(v)]++
 	}
 	// отсортировать результат по количеству
-	var forSort = make([]Pair, len(counts))
+	forSort := make([]Pair, len(counts))
 	i := 0
 	for k, v := range counts {
 		forSort[i] = Pair{
