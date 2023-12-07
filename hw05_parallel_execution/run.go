@@ -3,6 +3,7 @@ package hw05parallelexecution
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
@@ -20,25 +21,26 @@ func Run(tasks []Task, n, m int) error {
 		close(tch)
 	}()
 	var wg sync.WaitGroup
-	var errCounter int
+	var errCounter int32
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 			// читаем, пока канал не закроется
 			for t := range tch {
-				if m != 0 && errCounter > m {
+				e := int(atomic.LoadInt32(&errCounter))
+				if m != 0 && e > m {
 					break
 				}
 				err := t()
 				if err != nil {
-					errCounter++
+					atomic.AddInt32(&errCounter, 1)
 				}
 			}
-		}(i)
+		}()
 	}
 	wg.Wait()
-	if m != 0 && errCounter > m {
+	if m != 0 && int(errCounter) > m {
 		return ErrErrorsLimitExceeded
 	}
 	return nil
