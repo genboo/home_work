@@ -7,11 +7,15 @@ import (
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
+var ErrNoWorkers = errors.New("workers counts must be greater 0")
 
 type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
+	if n <= 0 {
+		return ErrNoWorkers
+	}
 	tch := make(chan Task, n)
 	go func() {
 		// кладем таски в канал, чтобы другие горутины могли их по одному забирать
