@@ -54,13 +54,9 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 }
 
 func pipeline(in In, stages ...Stage) Out {
-	var out Out
+	var out = in
 	for _, stage := range stages {
-		if out == nil {
-			out = stage(in)
-		} else {
-			out = stage(out)
-		}
+		out = stage(out)
 	}
 	return out
 }
