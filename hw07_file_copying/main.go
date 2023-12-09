@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"log"
+	"os"
 )
 
 var (
@@ -18,5 +20,39 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// Place your code here.
+
+	var err error
+	var fileFrom *os.File
+	fileFrom, err = os.Open(from)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer func(file *os.File) {
+		err = file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(fileFrom)
+
+	fileTo, err := os.Create(to)
+	if err != nil {
+		return
+	}
+	defer func(fileTo *os.File) {
+		err = fileTo.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(fileTo)
+
+	buff := make([]byte, limit)
+	_, err = fileFrom.ReadAt(buff, offset)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = os.WriteFile(to, buff, os.ModePerm)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
