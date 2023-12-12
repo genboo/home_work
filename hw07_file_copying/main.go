@@ -34,9 +34,20 @@ func main() {
 		}
 	}(fileFrom)
 
-	fileTo, err := os.Create(to)
+	var fi os.FileInfo
+	fi, err = fileFrom.Stat()
 	if err != nil {
-		return
+		log.Fatalln(err)
+	}
+
+	if offset > fi.Size() {
+		log.Fatalln()
+	}
+
+	var fileTo *os.File
+	fileTo, err = os.Create(to)
+	if err != nil {
+		log.Fatalln(err)
 	}
 	defer func(fileTo *os.File) {
 		err = fileTo.Close()
@@ -45,12 +56,16 @@ func main() {
 		}
 	}(fileTo)
 
-	buff := make([]byte, limit)
+	var buff []byte
+	if limit == 0 {
+		buff = make([]byte, fi.Size()-offset)
+	} else {
+		buff = make([]byte, limit)
+	}
 	_, err = fileFrom.ReadAt(buff, offset)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	err = os.WriteFile(to, buff, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
