@@ -21,23 +21,18 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	result := sync.Map{}
 	order := make([]interface{}, 0)
 	var wg sync.WaitGroup
-	output := func(init interface{}, v In) {
-		var r interface{}
-		select {
-		case r = <-pipeline(v, stages...):
+	output := func(init interface{}) {
+		r := <-pipeline(init, done, stages...)
+		if r != nil {
 			result.Store(init, r)
-		case <-done:
 		}
 		wg.Done()
 	}
-	values := make(Bi)
 	for v := range in {
 		wg.Add(1)
 		order = append(order, v)
-		go output(v, values)
-		values <- v
+		go output(v)
 	}
-	close(values)
 	out := make(Bi)
 	// ожидаем завершения всех пайплайнов, чтобы записать результаты в канал и закрыть его
 	go func() {
@@ -53,10 +48,25 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	return out
 }
 
-func pipeline(in In, stages ...Stage) Out {
-	out := in
-	for _, stage := range stages {
-		out = stage(out)
-	}
+func pipeline(r interface{}, done In, stages ...Stage) Out {
+	out := make(Bi)
+	go func() {
+		for _, stage := range stages {
+			stageChn := make(Bi)
+			go func() {
+				stageChn <- r
+				close(stageChn)
+			}()
+			select {
+			case r = <-stage(stageChn):
+				continue
+			case <-done:
+				close(out)
+				return
+			}
+		}
+		out <- r
+		close(out)
+	}()
 	return out
 }
