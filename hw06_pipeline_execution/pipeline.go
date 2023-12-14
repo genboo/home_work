@@ -1,9 +1,5 @@
 package hw06pipelineexecution
 
-import (
-	"sync"
-)
-
 type (
 	In  = <-chan interface{}
 	Out = In
@@ -18,55 +14,31 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		close(out)
 		return out
 	}
-	result := sync.Map{}
-	order := make([]interface{}, 0)
-	var wg sync.WaitGroup
-	output := func(init interface{}) {
-		r := <-pipeline(init, done, stages...)
-		if r != nil {
-			result.Store(init, r)
-		}
-		wg.Done()
+	out := in
+	for _, stage := range stages {
+		out = executeStage(out, done, stage)
 	}
-	for v := range in {
-		wg.Add(1)
-		order = append(order, v)
-		go output(v)
-	}
-	out := make(Bi)
-	// ожидаем завершения всех пайплайнов, чтобы записать результаты в канал и закрыть его
-	go func() {
-		wg.Wait()
-		for _, v := range order {
-			val, ok := result.Load(v)
-			if ok {
-				out <- val
-			}
-		}
-		close(out)
-	}()
 	return out
 }
 
-func pipeline(r interface{}, done In, stages ...Stage) Out {
+func executeStage(in, done In, stage Stage) Out {
 	out := make(Bi)
 	go func() {
-		for _, stage := range stages {
-			stageChn := make(Bi)
-			go func() {
-				stageChn <- r
-				close(stageChn)
-			}()
+		defer func() {
+			close(out)
+		}()
+		val := stage(in)
+		for {
 			select {
-			case r = <-stage(stageChn):
-				continue
+			case v, ok := <-val:
+				if !ok {
+					return
+				}
+				out <- v
 			case <-done:
-				close(out)
 				return
 			}
 		}
-		out <- r
-		close(out)
 	}()
 	return out
 }
