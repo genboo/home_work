@@ -91,7 +91,11 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 			buff = limit - bytesCopied
 		}
 		num, err = io.CopyN(fileTo, fileFrom, buff)
-		if err != nil || num == 0 {
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		if num == 0 {
 			break
 		}
 		bytesCopied += num
