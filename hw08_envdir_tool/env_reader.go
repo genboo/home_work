@@ -20,9 +20,7 @@ const (
 	stopLetter = "="
 )
 
-var (
-	ErrorStopLetter = errors.New("имя не должно содержать =")
-)
+var ErrorStopLetter = errors.New("имя не должно содержать =")
 
 // ReadDir reads a specified directory and returns map of env variables.
 // Variables represented as files where filename is name of variable, file first line is a value.
