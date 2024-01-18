@@ -18,7 +18,7 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	if len(cmd) < 1 {
 		return codeWrongCmd
 	}
-	c := exec.Command(cmd[0], cmd[1:]...)
+	c := exec.Command(cmd[0], cmd[1:]...) // #nosec G204
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
