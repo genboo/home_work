@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,7 +36,7 @@ func ReadDir(dir string) (Environment, error) {
 				return nil, ErrorStopLetter
 			}
 			var buf []byte
-			buf, err = os.ReadFile(fmt.Sprintf("%s/%s", dir, e.Name()))
+			buf, err = os.ReadFile(filepath.Join(dir, e.Name()))
 			if err != nil {
 				return nil, err
 			}
@@ -45,7 +45,7 @@ func ReadDir(dir string) (Environment, error) {
 			}
 			if !value.NeedRemove {
 				val := string(buf)
-				val = strings.TrimRight(strings.TrimRight(strings.Split(val, "\n")[0], " "), "\t")
+				val = strings.TrimRight(strings.Split(val, "\n")[0], " \t")
 				val = string(bytes.ReplaceAll([]byte(val), []byte{0x00}, []byte("\n")))
 				value.Value = val
 			}

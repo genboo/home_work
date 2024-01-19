@@ -25,5 +25,6 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	RunCmd(cmd, env)
+
+	os.Exit(RunCmd(cmd, env))
 }
